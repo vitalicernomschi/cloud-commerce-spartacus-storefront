@@ -2,6 +2,8 @@
 set -e
 set -o pipefail
 
+exit 1
+
 function validatestyles {
     echo "-----"
     echo "Validating styles app"
