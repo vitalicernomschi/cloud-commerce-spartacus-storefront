@@ -9,7 +9,7 @@ branches:
     - develop
     - "/^feature\\/.*$/"
 before_script:
-  - npm install -g angular-cli
+  - npm install -g @angular/cli@6.2.4
 script: './citest.sh'
 notifications:
   slack:
