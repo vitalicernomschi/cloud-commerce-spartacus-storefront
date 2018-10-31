@@ -6,7 +6,7 @@ ls -l
 
 cd ..
 
-mkdir e2estorefront
+ng new e2estorefront --styles=scss
 
 cd e2estorefront
 
@@ -14,3 +14,4 @@ pwd
 
 ls -l
 
+ng e2e
