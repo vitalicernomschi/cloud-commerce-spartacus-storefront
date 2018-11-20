@@ -43,6 +43,10 @@
             </div>
         </div>
 
+        <a routerLink="reviews">reviews</a> | <a routerLink="specs">specs</a>
+        <router-outlet></router-outlet>
+
+        
         <ng-container *cxOutlet="outlets.TAB">
             <div class="cx-product-details__tabset" #tabSetWrapper>
                 <ngb-tabset justify="center" #tabSet>
