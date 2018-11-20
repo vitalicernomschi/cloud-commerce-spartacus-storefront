@@ -7,13 +7,27 @@ import { CmsPageGuards } from '../../../cms/guards/cms-page.guard';
 import { ProductDetailsPageLayoutModule } from '../../layout/product-details-page-layout/product-details-page-layout.module';
 import { ProductPageComponent } from './product-page.component';
 import { ConfigurableRoutes } from '@spartacus/core';
+import {
+  ProductReviewsComponent,
+  ProductAttributesComponent
+} from '../../../product';
 
 const routes: ConfigurableRoutes = [
   {
     path: null,
     canActivate: [ProductGuard, CmsPageGuards],
     component: ProductPageComponent,
-    data: { cxPath: 'product' }
+    data: { cxPath: 'product' },
+    children: [
+      {
+        path: 'reviews',
+        component: ProductReviewsComponent
+      },
+      {
+        path: 'specs',
+        component: ProductAttributesComponent
+      }
+    ]
   },
   {
     path:
