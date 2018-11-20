@@ -1,9 +1,10 @@
+reviews (we don't have the product input anymore...)
 <ng-container *ngIf="!isWritingReview; else writeReview">
 
     <div class="header">
         <h3>Overall Rating</h3>
         <button class="btn btn-primary" (click)="initiateWriteReview()">Write a Review</button>
-        <cx-star-rating class="rating" [rating]="product.averageRating" [disabled]="true"></cx-star-rating>
+        <cx-star-rating *ngIf="product" class="rating" [rating]="product.averageRating" [disabled]="true"></cx-star-rating>
     </div>
 
     <ng-container *ngIf="!isWritingReview; else writeReview">
