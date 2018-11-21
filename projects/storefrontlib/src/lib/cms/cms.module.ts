@@ -21,11 +21,13 @@ import { OccCmsService } from './services/occ-cms.service';
 import { ComponentMapperService } from './services/component-mapper.service';
 import { DefaultPageService } from './services/default-page.service';
 import { OutletModule } from '../outlet/outlet.module';
+import { CmsComponentFactoryService } from './components/dynamic-slot/cms-component-factory.service';
 
 const services: any[] = [
   OccCmsService,
   ComponentMapperService,
-  DefaultPageService
+  DefaultPageService,
+  CmsComponentFactoryService
 ];
 
 @NgModule({

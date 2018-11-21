@@ -1,5 +1,12 @@
-import { Directive, Input, OnInit } from '@angular/core';
+import {
+  Directive,
+  Input,
+  OnInit,
+  ViewContainerRef,
+  ChangeDetectorRef
+} from '@angular/core';
 import { CmsService } from '../../facade/cms.service';
+import { CmsComponentFactoryService } from './cms-component-factory.service';
 
 @Directive({
   selector: '[cxCmsSlot]'
@@ -8,7 +15,11 @@ export class CmsSlotDirective implements OnInit {
   @Input()
   cxCmsSlot: string | string[];
 
-  constructor(protected cmsService: CmsService) {}
+  constructor(
+    protected viewContainer: ViewContainerRef,
+    protected cmsService: CmsService,
+    protected cmsComponentFactoryService: CmsComponentFactoryService
+  ) {}
 
   ngOnInit() {
     const positions = [].concat(this.cxCmsSlot);
@@ -22,6 +33,6 @@ export class CmsSlotDirective implements OnInit {
   }
 
   protected renderComponents(component) {
-    console.log('render component', component);
+    this.cmsComponentFactoryService.create(this.viewContainer, component);
   }
 }
