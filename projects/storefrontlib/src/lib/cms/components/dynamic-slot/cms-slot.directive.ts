@@ -5,7 +5,8 @@ import {
   ViewContainerRef,
   ChangeDetectorRef,
   OnDestroy,
-  ComponentRef
+  ComponentRef,
+  Renderer2
 } from '@angular/core';
 import { CmsService } from '../../facade/cms.service';
 import { ComponentFactoryService } from './factories/component-factory.service';
@@ -23,7 +24,8 @@ export class CmsSlotDirective implements OnInit, OnDestroy {
     protected viewContainer: ViewContainerRef,
     protected cd: ChangeDetectorRef,
     protected cmsService: CmsService,
-    protected componentFactory: ComponentFactoryService
+    protected componentFactory: ComponentFactoryService,
+    protected renderer: Renderer2
   ) {}
 
   ngOnInit() {
@@ -38,7 +40,7 @@ export class CmsSlotDirective implements OnInit, OnDestroy {
 
   protected renderComponents(component) {
     this.cmpRefs.push(
-      this.componentFactory.create(this.viewContainer, component)
+      this.componentFactory.create(this.renderer, this.viewContainer, component)
     );
     this.cd.detectChanges();
   }

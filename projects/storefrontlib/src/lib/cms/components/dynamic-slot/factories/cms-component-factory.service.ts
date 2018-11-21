@@ -12,7 +12,7 @@ import { AbstractCmsComponent } from '../../abstract-cms-component';
 @Injectable()
 export class CmsComponentFactoryService {
   constructor(
-    private componentMapper: ComponentMapperService,
+    protected componentMapper: ComponentMapperService,
     protected cmsService: CmsService
   ) {}
 
