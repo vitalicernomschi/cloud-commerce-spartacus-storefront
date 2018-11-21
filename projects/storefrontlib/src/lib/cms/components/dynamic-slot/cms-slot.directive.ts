@@ -3,7 +3,9 @@ import {
   Input,
   OnInit,
   ViewContainerRef,
-  ChangeDetectorRef
+  ChangeDetectorRef,
+  OnDestroy,
+  ComponentRef
 } from '@angular/core';
 import { CmsService } from '../../facade/cms.service';
 import { CmsComponentFactoryService } from './cms-component-factory.service';
@@ -11,15 +13,17 @@ import { CmsComponentFactoryService } from './cms-component-factory.service';
 @Directive({
   selector: '[cxCmsSlot]'
 })
-export class CmsSlotDirective implements OnInit {
+export class CmsSlotDirective implements OnInit, OnDestroy {
   @Input()
   cxCmsSlot: string | string[];
+
+  private cmpRefs: ComponentRef<any>[] = [];
 
   constructor(
     protected viewContainer: ViewContainerRef,
     protected cd: ChangeDetectorRef,
     protected cmsService: CmsService,
-    protected cmsComponentFactoryService: CmsComponentFactoryService
+    protected cmsComponentFactory: CmsComponentFactoryService
   ) {}
 
   ngOnInit() {
@@ -33,11 +37,19 @@ export class CmsSlotDirective implements OnInit {
   }
 
   protected renderComponents(component) {
-    this.cmsComponentFactoryService.create(this.viewContainer, component);
+    this.cmpRefs.push(
+      this.cmsComponentFactory.create(this.viewContainer, component)
+    );
     this.cd.detectChanges();
   }
 
   protected getPositions(): string[] {
     return [].concat(this.cxCmsSlot);
+  }
+
+  ngOnDestroy() {
+    this.cmpRefs.filter(ref => !!ref).forEach(ref => {
+      ref.destroy();
+    });
   }
 }
