@@ -5,11 +5,12 @@ import { Directive, Input, OnInit } from '@angular/core';
 })
 export class CmsSlotDirective implements OnInit {
   @Input()
-  cxCmsSlot: string;
+  cxCmsSlot: string | string[];
 
   constructor() {}
 
   ngOnInit() {
-    console.log(this.cxCmsSlot);
+    const positions = [].concat(this.cxCmsSlot);
+    console.log(positions);
   }
 }
