@@ -48,7 +48,14 @@ export class CmsSlotDirective implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.cmpRefs.filter(ref => !!ref).forEach(ref => {
-      ref.destroy();
+      if (ref instanceof ComponentRef) {
+        ref.destroy();
+      } else {
+        this.renderer.removeChild(
+          this.viewContainer.element.nativeElement.parentElement,
+          ref
+        );
+      }
     });
   }
 }
