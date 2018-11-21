@@ -21,13 +21,13 @@ import { OccCmsService } from './services/occ-cms.service';
 import { ComponentMapperService } from './services/component-mapper.service';
 import { DefaultPageService } from './services/default-page.service';
 import { OutletModule } from '../outlet/outlet.module';
-import { CmsComponentFactoryService } from './components/dynamic-slot/cms-component-factory.service';
+
+import { factories } from './components/dynamic-slot/factories';
 
 const services: any[] = [
   OccCmsService,
   ComponentMapperService,
-  DefaultPageService,
-  CmsComponentFactoryService
+  DefaultPageService
 ];
 
 @NgModule({
@@ -42,6 +42,7 @@ const services: any[] = [
   providers: [
     reducerProvider,
     ...services,
+    ...factories,
     ...guards,
     { provide: CmsModuleConfig, useExisting: Config }
   ],

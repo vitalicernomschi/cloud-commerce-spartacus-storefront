@@ -8,7 +8,7 @@ import {
   ComponentRef
 } from '@angular/core';
 import { CmsService } from '../../facade/cms.service';
-import { CmsComponentFactoryService } from './cms-component-factory.service';
+import { ComponentFactoryService } from './factories/component-factory.service';
 
 @Directive({
   selector: '[cxCmsSlot]'
@@ -23,7 +23,7 @@ export class CmsSlotDirective implements OnInit, OnDestroy {
     protected viewContainer: ViewContainerRef,
     protected cd: ChangeDetectorRef,
     protected cmsService: CmsService,
-    protected cmsComponentFactory: CmsComponentFactoryService
+    protected componentFactory: ComponentFactoryService
   ) {}
 
   ngOnInit() {
@@ -38,7 +38,7 @@ export class CmsSlotDirective implements OnInit, OnDestroy {
 
   protected renderComponents(component) {
     this.cmpRefs.push(
-      this.cmsComponentFactory.create(this.viewContainer, component)
+      this.componentFactory.create(this.viewContainer, component)
     );
     this.cd.detectChanges();
   }

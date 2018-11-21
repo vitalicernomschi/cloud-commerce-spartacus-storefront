@@ -4,10 +4,10 @@ import {
   Injector,
   ComponentRef
 } from '@angular/core';
-import { ComponentMapperService } from '../../services';
-import { CmsComponentData } from '../cms-component-data';
-import { CmsService } from '../../facade/cms.service';
-import { AbstractCmsComponent } from '../abstract-cms-component';
+import { ComponentMapperService } from '../../../services/component-mapper.service';
+import { CmsComponentData } from '../../cms-component-data';
+import { CmsService } from '../../../facade/cms.service';
+import { AbstractCmsComponent } from '../../abstract-cms-component';
 
 @Injectable()
 export class CmsComponentFactoryService {
