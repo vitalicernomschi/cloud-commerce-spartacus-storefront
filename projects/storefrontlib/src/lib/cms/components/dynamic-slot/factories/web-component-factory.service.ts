@@ -22,9 +22,13 @@ export class WebComponentFactoryService {
     @Inject(DOCUMENT) private document: any
   ) {}
 
-  async create(renderer: Renderer2, vcr: ViewContainerRef, component) {
+  async create(
+    renderer: Renderer2,
+    vcr: ViewContainerRef,
+    componentData: CmsComponentData
+  ) {
     const elementName = await this.initWebComponent(
-      component.componentType,
+      componentData.type,
       renderer
     );
     let webElement;
@@ -33,20 +37,12 @@ export class WebComponentFactoryService {
 
       webElement.cxApi = {
         ...vcr.injector.get(CxApiService),
-        CmsComponentData: this.getCmsDataForComponent(component)
+        CmsComponentData: componentData
       };
 
       renderer.appendChild(vcr.element.nativeElement.parentElement, webElement);
     }
     return webElement;
-  }
-
-  private getCmsDataForComponent(component): CmsComponentData {
-    return {
-      uid: component.uid,
-      contextParameters: component.contextParameters,
-      data$: this.cmsService.getComponentData(component.uid)
-    };
   }
 
   protected initWebComponent(

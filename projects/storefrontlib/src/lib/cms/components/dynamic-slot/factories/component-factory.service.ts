@@ -3,6 +3,7 @@ import { ComponentMapperService } from '../../../services';
 import { CmsService } from '../../../facade/cms.service';
 import { CmsComponentFactoryService } from './cms-component-factory.service';
 import { WebComponentFactoryService } from './web-component-factory.service';
+import { CmsComponentData } from '../../cms-component-data';
 
 @Injectable()
 export class ComponentFactoryService {
@@ -14,10 +15,20 @@ export class ComponentFactoryService {
   ) {}
 
   create(renderer: Renderer2, vcr: ViewContainerRef, component): any {
+    const componentData = this.getCmsDataForComponent(component);
     if (this.componentMapper.isWebComponent(component.typeCode)) {
-      return this.webComponentFactory.create(renderer, vcr, component);
+      return this.webComponentFactory.create(renderer, vcr, componentData);
     } else {
-      return this.cmsComponentFactory.create(vcr, component);
+      return this.cmsComponentFactory.create(vcr, componentData);
     }
+  }
+
+  private getCmsDataForComponent(component): CmsComponentData {
+    return {
+      uid: component.uid,
+      type: component.typeCode,
+      contextParameters: component.contextParameters,
+      data$: this.cmsService.getComponentData(component.uid)
+    };
   }
 }

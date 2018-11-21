@@ -16,22 +16,25 @@ export class CmsComponentFactoryService {
     protected cmsService: CmsService
   ) {}
 
-  create(vcr: ViewContainerRef, component): ComponentRef<any> {
+  create(
+    vcr: ViewContainerRef,
+    componentData: CmsComponentData
+  ): ComponentRef<any> {
     const factory = this.componentMapper.getComponentFactoryByCode(
-      component.typeCode
+      componentData.type
     );
     let cmpRef: ComponentRef<any>;
     if (factory) {
       cmpRef = vcr.createComponent(
         factory,
         undefined,
-        this.getInjectorForComponent(vcr, component)
+        this.getInjectorForComponent(vcr, componentData)
       );
 
       if (cmpRef.instance instanceof AbstractCmsComponent) {
         cmpRef.instance.onCmsComponentInit(
-          component.uid,
-          component.contextParameters
+          componentData.uid,
+          componentData.contextParameters
         );
       }
     }
@@ -39,23 +42,18 @@ export class CmsComponentFactoryService {
     return cmpRef;
   }
 
-  private getInjectorForComponent(vcr: ViewContainerRef, component) {
+  private getInjectorForComponent(
+    vcr: ViewContainerRef,
+    componentData: CmsComponentData
+  ) {
     return Injector.create({
       providers: [
         {
           provide: CmsComponentData,
-          useValue: this.getCmsDataForComponent(component)
+          useValue: componentData
         }
       ],
       parent: vcr.injector
     });
-  }
-
-  private getCmsDataForComponent(component): CmsComponentData {
-    return {
-      uid: component.uid,
-      contextParameters: component.contextParameters,
-      data$: this.cmsService.getComponentData(component.uid)
-    };
   }
 }
