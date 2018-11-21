@@ -7,6 +7,7 @@ import {
 import { ComponentMapperService } from '../../services';
 import { CmsComponentData } from '../cms-component-data';
 import { CmsService } from '../../facade/cms.service';
+import { AbstractCmsComponent } from '../abstract-cms-component';
 
 @Injectable()
 export class CmsComponentFactoryService {
@@ -19,14 +20,23 @@ export class CmsComponentFactoryService {
     const factory = this.componentMapper.getComponentFactoryByCode(
       component.typeCode
     );
-
+    let cmpRef: ComponentRef<any>;
     if (factory) {
-      return vcr.createComponent(
+      cmpRef = vcr.createComponent(
         factory,
         undefined,
         this.getInjectorForComponent(vcr, component)
       );
+
+      if (cmpRef.instance instanceof AbstractCmsComponent) {
+        cmpRef.instance.onCmsComponentInit(
+          component.uid,
+          component.contextParameters
+        );
+      }
     }
+
+    return cmpRef;
   }
 
   private getInjectorForComponent(vcr: ViewContainerRef, component) {

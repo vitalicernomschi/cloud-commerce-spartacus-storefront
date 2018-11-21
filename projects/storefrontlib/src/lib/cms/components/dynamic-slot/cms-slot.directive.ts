@@ -3,7 +3,8 @@ import {
   Input,
   OnInit,
   ViewContainerRef,
-  ChangeDetectorRef
+  ChangeDetectorRef,
+  ComponentRef
 } from '@angular/core';
 import { CmsService } from '../../facade/cms.service';
 import { CmsComponentFactoryService } from './cms-component-factory.service';
@@ -17,6 +18,7 @@ export class CmsSlotDirective implements OnInit {
 
   constructor(
     protected viewContainer: ViewContainerRef,
+    protected cd: ChangeDetectorRef,
     protected cmsService: CmsService,
     protected cmsComponentFactoryService: CmsComponentFactoryService
   ) {}
@@ -34,5 +36,6 @@ export class CmsSlotDirective implements OnInit {
 
   protected renderComponents(component) {
     this.cmsComponentFactoryService.create(this.viewContainer, component);
+    this.cd.detectChanges();
   }
 }
