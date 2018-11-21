@@ -3,22 +3,17 @@ import {
   Type,
   ComponentFactoryResolver,
   Inject,
-  Renderer2,
   PLATFORM_ID
 } from '@angular/core';
 import { CmsModuleConfig } from '../cms-module-config';
-import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 
 @Injectable()
 export class ComponentMapperService {
   missingComponents = [];
 
-  private loadedWebComponents: { [path: string]: any } = {};
-
   constructor(
     private componentFactoryResolver: ComponentFactoryResolver,
     private config: CmsModuleConfig,
-    @Inject(DOCUMENT) private document: any,
     @Inject(PLATFORM_ID) private platform: any
   ) {}
 
@@ -42,7 +37,7 @@ export class ComponentMapperService {
    *
    * @param typeCode the component type
    */
-  protected getType(typeCode: string) {
+  public getType(typeCode: string) {
     const alias = this.config.cmsComponentMapping[typeCode];
     if (!alias) {
       if (this.missingComponents.indexOf(typeCode) === -1) {
@@ -82,42 +77,5 @@ export class ComponentMapperService {
 
   isWebComponent(typeCode: string): boolean {
     return (this.getType(typeCode) || '').includes('#');
-  }
-
-  initWebComponent(
-    componentType: string,
-    renderer: Renderer2
-  ): Promise<string> {
-    return new Promise(resolve => {
-      const [path, selector] = this.getType(componentType).split('#');
-
-      let script = this.loadedWebComponents[path];
-
-      if (!script) {
-        script = renderer.createElement('script');
-        this.loadedWebComponents[path] = script;
-        script.setAttribute('src', path);
-        renderer.appendChild(this.document.body, script);
-
-        if (isPlatformBrowser(this.platform)) {
-          script.onload = () => {
-            script.onload = null;
-          };
-        }
-      }
-
-      if (script.onload) {
-        // If script is still loading (has onload callback defined)
-        // add new callback and chain it with the existing one.
-        // Needed to support loading multiple components from one script
-        const chainedOnload = script.onload;
-        script.onload = () => {
-          chainedOnload();
-          resolve(selector);
-        };
-      } else {
-        resolve(selector);
-      }
-    });
   }
 }
