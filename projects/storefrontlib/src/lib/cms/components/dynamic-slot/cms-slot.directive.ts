@@ -29,7 +29,8 @@ export class CmsSlotDirective implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    this.getPositions().forEach(position => this.renderSlot(position));
+    const positions = [].concat(this.cxCmsSlot);
+    positions.forEach(position => this.renderSlot(position));
   }
 
   protected renderSlot(position) {
@@ -43,10 +44,6 @@ export class CmsSlotDirective implements OnInit, OnDestroy {
       this.componentFactory.create(this.renderer, this.viewContainer, component)
     );
     this.cd.detectChanges();
-  }
-
-  protected getPositions(): string[] {
-    return [].concat(this.cxCmsSlot);
   }
 
   ngOnDestroy() {
