@@ -6,10 +6,14 @@ import {
   ChangeDetectorRef,
   OnDestroy,
   ComponentRef,
-  Renderer2
+  Renderer2,
+  TemplateRef
 } from '@angular/core';
 import { CmsService } from '../../facade/cms.service';
 import { ComponentFactoryService } from './factories/component-factory.service';
+
+import { OutletService } from '../../../outlet';
+import { OutletFactoryService } from './factories/outlet-factory.service';
 
 @Directive({
   selector: '[cxCmsSlot]'
@@ -21,11 +25,12 @@ export class CmsSlotDirective implements OnInit, OnDestroy {
   private cmpRefs: ComponentRef<any>[] = [];
 
   constructor(
-    protected viewContainer: ViewContainerRef,
     protected cd: ChangeDetectorRef,
+    protected renderer: Renderer2,
+    protected viewContainer: ViewContainerRef,
     protected cmsService: CmsService,
     protected componentFactory: ComponentFactoryService,
-    protected renderer: Renderer2
+    protected outletFactory: OutletFactoryService
   ) {}
 
   ngOnInit() {
@@ -35,7 +40,9 @@ export class CmsSlotDirective implements OnInit, OnDestroy {
 
   protected renderSlot(position) {
     this.cmsService.getContentSlot(position).subscribe((components: any[]) => {
-      components.forEach(component => this.renderComponents(component));
+      this.outletFactory.wrap(position, this.viewContainer, () =>
+        components.forEach(component => this.renderComponents(component))
+      );
     });
   }
 
