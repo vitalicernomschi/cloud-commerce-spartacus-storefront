@@ -3,8 +3,7 @@ import {
   Input,
   OnInit,
   ViewContainerRef,
-  ChangeDetectorRef,
-  ComponentRef
+  ChangeDetectorRef
 } from '@angular/core';
 import { CmsService } from '../../facade/cms.service';
 import { CmsComponentFactoryService } from './cms-component-factory.service';
@@ -24,8 +23,7 @@ export class CmsSlotDirective implements OnInit {
   ) {}
 
   ngOnInit() {
-    const positions = [].concat(this.cxCmsSlot);
-    positions.forEach(position => this.renderSlot(position));
+    this.getPositions().forEach(position => this.renderSlot(position));
   }
 
   protected renderSlot(position) {
@@ -37,5 +35,9 @@ export class CmsSlotDirective implements OnInit {
   protected renderComponents(component) {
     this.cmsComponentFactoryService.create(this.viewContainer, component);
     this.cd.detectChanges();
+  }
+
+  protected getPositions(): string[] {
+    return [].concat(this.cxCmsSlot);
   }
 }
