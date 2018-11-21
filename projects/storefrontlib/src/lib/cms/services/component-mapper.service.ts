@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  Type,
-  ComponentFactoryResolver,
-  Inject,
-  PLATFORM_ID
-} from '@angular/core';
+import { Injectable, Type, ComponentFactoryResolver } from '@angular/core';
 import { CmsModuleConfig } from '../cms-module-config';
 
 @Injectable()
@@ -13,8 +7,7 @@ export class ComponentMapperService {
 
   constructor(
     private componentFactoryResolver: ComponentFactoryResolver,
-    private config: CmsModuleConfig,
-    @Inject(PLATFORM_ID) private platform: any
+    private config: CmsModuleConfig
   ) {}
 
   /**
