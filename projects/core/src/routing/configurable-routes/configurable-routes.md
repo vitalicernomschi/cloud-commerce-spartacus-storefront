@@ -17,7 +17,7 @@ The default config for Storefront's pages can be found in [`defaut-storefront-ro
 // defaut-storefront-routes-translations.ts
 default: {
     /* ... */
-    product: {
+    product: { // `product` key is a unique name of the route
         paths: ['product/:productCode'],
         /* ... */
     }
@@ -32,7 +32,7 @@ StorefrontModule.withConfig({
     routesConfig: {
         translations: {
             en: {
-                // `product` is a unique name of the route
+                // `product` key is a unique name of the route
                 product: { paths: [':productCode/custom/product-path'] }
             }
         }
@@ -95,27 +95,157 @@ FAQ:
 - Because Angular requires any defined `path` in compilation time.
 
 
-### Current limitations
+---
+## Additional params in URL
+More params can be configured for URLs (for example for SEO purposes):
 
-- only english (`en`) translations are used
+```typescript
+StorefrontModule.withConfig({
+    routesConfig: {
+        translations: {
+            en: {
+                // `product` key is a unique name of the route
+                product: { 
+                    paths: [
+                        // :productCode is an obligatory param
+                        // :productName is a new param
+                        ':productCode/custom/product-path/:productName',
+                    ] 
+                }
+            }
+        }
+    }
+})
+```
 
 
-### Plans
+```html
+<!-- `product` is a unique name of the route -->
+<a [routerLink]="['product'] | cxTranslateURL: [{ productCode: 1234 }]"`></a>
 
-So we plan to use only abastract page names with in templates and classes. And give possibility to configure route's paths in different languages in StorefrontModule.withConfig
+<!-- result -->
+<a href="1234/custom/product-path"></a>
+```
 
-And automatically generate navigation links to those pages in templates.
-Ad 1. cxPath / cxRedirectTo - handle abstract page name (that then will be matched with paths from config)
-Ad 2. then path/redirectTo has to be null (Angular doesn't allow it to be undefined), that's why those properties are left with null.
+### Additional params in URL vs. URL of default shape
 
-### Work in progress:
+- If URL coming from CMS doesn't contain `:productName` param, an alias without `:productName` param has to be configured too (otherwise URL from CMS will be translated to `/`):
 
-More ways to extend default routes translations config can be found under this link.
-> SPIKE TODO: write doc and add link here
+    ```typescript
+    StorefrontModule.withConfig({
+        routesConfig: {
+            translations: {
+                en: {
+                    // `product` key is a unique name of the route
+                    product: { 
+                        paths: [
+                            // :productCode is an obligatory param
+                            // :productName is a new param
+                            ':productCode/custom/product-path/:productName',
+                            ':productCode/custom/product-path',
+                        ] 
+                    }
+                }
+            }
+        }
+    })
+    ```
 
-### Whe can pass to links whole entity
+    ```html
+    <!-- `cmsData.URL === '/product/1234` is URL of default shape -->
+    <a [routerLink]="cmsData.URL | cxTranslateURL"`></a> 
 
-### Disabling routes
+    <!-- result -->
+    <a href="1234/custom/product-path"></a>
+    ```
+
+- However, if URL coming from CMS actually **does contain** a non-default `:productName` param, it suffices to override default URLs in the config:
+
+    ```typescript
+    StorefrontModule.withConfig({
+        routesConfig: {
+            translations: {
+                default: {
+                    product: {
+                        paths: ['product/:productCode/:productName']
+                    }
+                },
+                en: {
+                    product: { 
+                        // :productCode is an obligatory param
+                        // :productName is a new param
+                        paths: [':productCode/custom/product-path/:productName'] 
+                    }
+                }
+            }
+        }
+    })
+    ```
+
+    ```html
+    <!-- `cmsData.URL === '/product/1234/ABC` is URL of default shape -->
+    <a [routerLink]="cmsData.URL | cxTranslateURL"`></a> 
+
+    <!-- result -->
+    <a href="1234/custom/product-path/ABC"></a>
+    ```
+
+### Params mapping
+A thick domain object can be passed to `cxTranslateUrl` as params instead of thin object with only obligatory params. However to translate properly the URL, the route params' names must match to names of properties in given object. Otherwise, we should configure default `paramsMapping`:
+```typescript
+StorefrontModule.withConfig({
+    routesConfig: {
+        translations: {
+            default: {
+                product: {
+                    paramsMapping: { productCode: 'code' }
+                }
+            },
+            en: {
+                product: { paths: [':productCode/custom/product-path'] }
+            }
+        }
+    }
+})
+```
+
+**Note:** Default params mapping can be found in [`defaut-storefront-routes-translations.ts`](./config/default-storefront-routes-translations.ts).
+
+```html
+<!-- 
+    productObject === {
+        code: 1234,
+        name: 'ABC'
+        images: {...},
+        price: {...}
+        ...
+    }
+    -->
+<a [routerLink]="['product'] | cxTranslateURL: [productObject]"`></a>
+
+<!-- result -->
+<a href="1234/custom/product-path"></a>
+```
+
+!!! Names of params in default URLs should not be changed, because they are hardcoded used in components. So please don't do:
+```typescript
+StorefrontModule.withConfig({
+    routesConfig: {
+        translations: {
+            default: {
+                product: {
+                    paramsMapping: { customProductCodeParam: 'code' }
+                }
+            },
+            en: {
+                product: { paths: ['product/:customProductCodeParam'] } // dont replace standard :productCode param name
+            }
+        }
+    }
+})
+```
+
+## Disabling routes
 To disable a route (to remove it from Angular's router config and prevent generating links to this route) it suffices to set `null` for it's unique name in the config:
 
 ```typescript
@@ -143,6 +273,21 @@ StorefrontModule.withConfig({
 <!-- result -->
 <a href="/"></a>
 ```
+
+### Current limitations
+
+- only english (`en`) translations are used
+
+
+### Plans
+
+### Work in progress:
+
+More ways to extend default routes translations config can be found under this link.
+> SPIKE TODO: write doc and add link here
+
+### Whe can pass to links whole entity
+
 
 ### Params mapping
 
