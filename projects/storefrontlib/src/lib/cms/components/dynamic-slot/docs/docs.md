@@ -17,3 +17,11 @@ The example below shows that we can also render multiple slots in one go.
 <div [cxCmsSlot]="['SiteLogo', 'SearchBox']"></div>
 ```
 
+## Outlets
+Outlets are a mechanism to replace or add to the standard layout of the storefront. CMS slots allow for various approaches:
+1. replace complete slot
+2. add to an existing slot (before or after the slot)
+3. Replace a component in the slot
+4. Add to an existing component (before or after the component)
+
+All of these options are driven by the `cxCmsSlot` directive. While iterating over the components, the outlets will be rendered. 
