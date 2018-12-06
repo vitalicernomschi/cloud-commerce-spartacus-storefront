@@ -29,7 +29,7 @@ default: {
 ```
 
 #### SUBJECTS OF CHANGE
-- There are plans to move default config from `@spartacus/core` and split it between the page modules in `@spartacus/storefrontlib`
+- default config is planned to be moved out from `@spartacus/core` and splitted in between the feature modules in `@spartacus/storefrontlib`
 
 
 ### Extending config
@@ -96,6 +96,10 @@ Default config can be extended in the Shell App, using `StorefrontModule.withCon
 
 - There are plans to support all languages. For now only English is supported (`default` and `en` keys).
 
+#### Don't modify obligatory names of params
+
+Names of params (for example `:productCode`) that appear in default URLs (for example `product/:productCode`) should not be omitted nor changed in configured URLs, because implementation of Storefront's components depend on the names of necessary route's params.
+
 
 ## Navigation links
 
@@ -136,7 +140,7 @@ Navigation links can be automatically generated using `cxTranslateUrl` pipe. It 
     result:
 
     ```html
-    <a [routerLink]="[1234, 'custom', 'product-path']"></a>
+    <a [routerLink]="['', 1234, 'custom', 'product-path']"></a>
     ```
 
     #### What if `{ route: <route> }` cannot be translated?
@@ -181,7 +185,7 @@ Navigation links can be automatically generated using `cxTranslateUrl` pipe. It 
     result:
 
     ```html
-    <a [routerLink]="[1234, 'custom', 'product-path']"></a>
+    <a [routerLink]="['', 1234, 'custom', 'product-path']"></a>
     ```
 
     b) When overwritten default URL shape
@@ -210,7 +214,7 @@ Navigation links can be automatically generated using `cxTranslateUrl` pipe. It 
     result:
 
     ```html
-    <a [routerLink]="[1234, 'custom', 'product-path']"></a>
+    <a [routerLink]="['', 1234, 'custom', 'product-path']"></a>
     ```
 
 
@@ -231,7 +235,7 @@ Navigation links can be automatically generated using `cxTranslateUrl` pipe. It 
 
 ## Routes
 
-Angular's `Routes` need to contain unique route name under property `data.cxPath` in order to be configurable and translatable. For example:
+Angular's `Routes` need to contain a unique route name at property `data.cxPath` in order to be configurable and translatable. For example:
 
 ```typescript
 const routes: Routes = [
@@ -248,8 +252,6 @@ const routes: Routes = [
 ];
 ```
 
-When more than one path is configured for specific route name, then its `Route` object will copied (in application's bootstrap time) and each copy will have one path from list of configured path aliases.
-
 #### SUBJECTS OF CHANGE:
 
 - `path` is planned to contain single default path
@@ -263,18 +265,17 @@ When more than one path is configured for specific route name, then its `Route` 
 
 
 ---
-## Additional params in URL
-More params can be configured for URLs (for example for SEO purposes):
+## Additional params
+More params can be added to configured URLs (for example for SEO purposes):
 
 ```typescript
 StorefrontModule.withConfig({
     routesConfig: {
         translations: {
             en: {
-                // `product` key is a unique name of the route
                 product: { 
                     paths: [
-                        // :productCode is an obligatory param
+                        // :productCode is an obligatory param, as it's present in default url
                         // :productName is a new param
                         ':productCode/custom/product-path/:productName',
                     ] 
@@ -285,31 +286,45 @@ StorefrontModule.withConfig({
 })
 ```
 
+Than it has to be handled properly for `{ route: <route> }` and `{ url: <url> }` options:
 
-```html
-<!-- `product` is a unique name of the route -->
-<a [routerLink]="{ route: [ { name: 'product', params: { productCode: 1234 } } ] } | cxTranslateUrl"`></a>
+1. `{ route: <route> }` has to contain also `productName` param. For example:
 
-<!-- result -->
-<a href="1234/custom/product-path"></a>
-```
+    ```html
+    <a [routerLink]="{ route: [ { name: 'product', params: { productName: 'ABC', productCode: 1234 } } ] } | cxTranslateUrl"`></a>
+    ```
 
-### Additional params in URL vs. URL of default shape
+    result:
 
-- If URL coming from CMS doesn't contain `:productName` param, an alias without `:productName` param has to be configured too (otherwise URL from CMS will be translated to `/`):
+    ```html
+    <a [routerLink]="['', 1234, 'custom', 'product-path', 'ABC']"></a>
+    ```
+
+    Otherwise url cannot be translated.
+
+2. `{ url: <url> }` has to contain also `productName` param. And default translations have to contain `:productName` too. For example:
+
+    ```html
+    <a [routerLink]="{ url: 'product/1234/ABC' } | cxTranslateUrl"`></a> 
+    ```
+
+    where config is:
 
     ```typescript
     StorefrontModule.withConfig({
         routesConfig: {
             translations: {
+                default: {
+                    product: { 
+                        paths: ['product/:productCode/:productName'] 
+                    }
+                }
                 en: {
-                    // `product` key is a unique name of the route
                     product: { 
                         paths: [
                             // :productCode is an obligatory param
                             // :productName is a new param
                             ':productCode/custom/product-path/:productName',
-                            ':productCode/custom/product-path',
                         ] 
                     }
                 }
@@ -318,81 +333,67 @@ StorefrontModule.withConfig({
     })
     ```
 
-    ```html
-    <!-- `/product/1234' === cmsData.url -->
-    <a [routerLink]="{ url: cmsData.url } | cxTranslateUrl"`></a> 
-
-    <!-- result -->
-    <a href="1234/custom/product-path"></a>
-    ```
-
-- However, if URL coming from CMS actually **does contain** a non-default `:productName` param, it suffices to override default URLs in the config:
-
-    ```typescript
-    StorefrontModule.withConfig({
-        routesConfig: {
-            translations: {
-                default: {
-                    product: {
-                        paths: ['product/:productCode/:productName']
-                    }
-                },
-                en: {
-                    product: { 
-                        // :productCode is an obligatory param
-                        // :productName is a new param
-                        paths: [':productCode/custom/product-path/:productName'] 
-                    }
-                }
-            }
-        }
-    })
-    ```
+    result:
 
     ```html
-    <!-- '/product/1234/ABC' === cmsData.url -->
-    <a [routerLink]="{ url: cmsData.url } | cxTranslateUrl"`></a> 
-
-    <!-- result -->
-    <a href="1234/custom/product-path/ABC"></a>
+    <a [routerLink]="['', 1234, 'custom', 'product-path', 'ABC']"></a>
     ```
+
+
+    Otherwise url cannot be translated.
 
 ### Params mapping
-A thick domain object can be passed to `cxTranslateUrl` as params instead of thin object with only obligatory params. However to translate properly the URL, the route params' names must match to names of properties in given object. Otherwise, we should configure default `paramsMapping`:
+
+For extensibility it's good to pass a big domain object (for example object with product details) with many unnecessary properties as params object to `{ route: [{params: <params>, ...}] }`. Then we can eaisly use values from this domain object in URL. But sometimes names of necessary properties don't match exactly to names of URL params. Thanks to `paramsMapping`, they can be mapped. For example:
+
+```html
+<a [routerLink]="{ route: [ { name: 'product', params: productDetails ] | cxTranslateUrl"`></a>
+```
+
+where
+
+```typescript
+productDetails === { name: 'ABC', /* ... */ }
+```
+
+and config is
+
 ```typescript
 StorefrontModule.withConfig({
     routesConfig: {
         translations: {
             default: {
                 product: {
-                    paramsMapping: { productCode: 'code' }
+                    /* object's 'name' property will be mapped to path's 'productName' param */
+                    paramsMapping: { productName: 'name' }
                 }
-            },
+            }
             en: {
-                product: { paths: [':productCode/custom/product-path'] }
+                product: { paths: ['/p/:productCode/:productName'] },
             }
         }
     }
 })
 ```
 
-**Note:** Default params mapping can be found in [`defaut-storefront-routes-translations.ts`](./config/default-storefront-routes-translations.ts).
+result:
 
 ```html
-<!-- 
-    productObject === {
-        code: 1234,
-        name: 'ABC'
-        images: {...},
-        price: {...}
-        ...
-    }
-    -->
-<a [routerLink]="['product'] | cxTranslateUrl: [productObject]"`></a>
-
-<!-- result -->
-<a href="1234/custom/product-path"></a>
+<a [routerLink]="['', 1234, 'custom', 'product-path']"></a>
 ```
+
+#### Default params maping
+
+Some Storefront's routes have already predefined default `paramsMapping`. It can be found in [`defaut-storefront-routes-translations.ts`](./config/default-storefront-routes-translations.ts)
+
+##### SUBJECTS OF CHANGE:
+
+- default `paramsMappings` are planned to be moved out from `@spartacus/core` and splitted in between the feature modules in `@spartacus/storefrontlib`
+
+
+#### Use `default` key for `paramsMapping`
+
+    Not to repeat `paramsMapping` in every language, they should be defined once under `default` key
 
 !!! Names of params in default URLs should not be changed, because they are hardcoded used in components. So please don't do:
 ```typescript
@@ -463,3 +464,7 @@ More ways to extend default routes translations config can be found under this l
 TODO: describe how it populates to all languages and how it changes behaviour of default URLs recognition
 
 ### 'path' and 'route' could not be both
+
+
+### Path aliases
+When more than one path is configured for specific route name, then relevant `Route` object will be multiplied and each `Route` copy will have one `path` from configured `paths` list.
