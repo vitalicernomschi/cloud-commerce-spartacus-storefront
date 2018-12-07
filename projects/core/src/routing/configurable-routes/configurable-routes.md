@@ -91,14 +91,26 @@ Every part of default config can be extended and overwritten in the Shell App, u
 
     Then URL of product page will have shape `:productCode/custom/product-path` only in English. But in every other language it will have the (overwritten) default shape (`p/:productCode`).
 
-#### Object extensibility rule:
+#### How config is extended
 
 - configured objects **extend** default objects
 - configured values (primitives, arrays, `null`) **overwrite** default values
 
-#### When configuring paths, use names of params from defaults
+#### Always include params from default paths
 
-All params that appear in default URLs (for example `:productCode` in path `'product/:productCode'`) mustn't be omitted in overwritten paths, because Storefront's components depend strictly on those essential params.
+All params that appear in default URLs (for example `:productCode` in path `'product/:productCode'`) mustn't be omitted in overwritten paths. Otherwise Storefront's components may break. For example please **don't do**:
+
+ ```typescript
+StorefrontModule.withConfig({
+    routesConfig: {
+        translations: {
+            en: {
+                product: { paths: ['product/:productName'] } // without :productCode
+            }
+        }
+    }
+})
+```
 
 #### SUBJECTS OF CHANGE
 
@@ -117,7 +129,7 @@ Navigation links can be automatically generated using `cxTranslateUrl` pipe. It 
     Example:
 
     ```html
-    <a [routerLink]="{ route: [ { name: 'product', params: { productCode: 1234 } } ] } | cxTranslateUrl"`></a>
+    <a [routerLink]="{ route: [ { name: 'product', params: { productCode: 1234 } } ] } | cxTranslateUrl"></a>
     ```
 
     where config is:
@@ -143,7 +155,7 @@ Navigation links can be automatically generated using `cxTranslateUrl` pipe. It 
 
     When URL cannot be translated from `{ route: <unknown-route> }` (for example due to typo in the route's name, mising necessary params or wrong config) *the root URL* `['/']` is returned:
     ```html
-    <a [routerLink]="{ route: <unknown-route> } | cxTranslateUrl"`></a>
+    <a [routerLink]="{ route: <unknown-route> } | cxTranslateUrl"></a>
     ```
 
     result:
@@ -162,7 +174,7 @@ Navigation links can be automatically generated using `cxTranslateUrl` pipe. It 
     1. When default shape of URL **is not overwritten**
 
         ```html
-        <a [routerLink]="{ url: 'product/1234' } | cxTranslateUrl"`></a> 
+        <a [routerLink]="{ url: 'product/1234' } | cxTranslateUrl"></a> 
         ```
 
         config:
@@ -193,7 +205,7 @@ Navigation links can be automatically generated using `cxTranslateUrl` pipe. It 
     2. When default shape of URL **is overwritten**
 
         ```html
-        <a [routerLink]="{ url: 'p/1234' } | cxTranslateUrl"`></a>
+        <a [routerLink]="{ url: 'p/1234' } | cxTranslateUrl"></a>
         ```
         
         config:
@@ -225,7 +237,7 @@ Navigation links can be automatically generated using `cxTranslateUrl` pipe. It 
     When URL cannot be translated from `{ url: <unknown-url> }` (for example due to unexpected shape of URL, or wrong config) *the original URL* is returned:
 
     ```html
-    <a [routerLink]="{ url: '/unknown/url' } | cxTranslateUrl"`></a> 
+    <a [routerLink]="{ url: '/unknown/url' } | cxTranslateUrl"></a> 
     ```
 
     result:
@@ -234,15 +246,18 @@ Navigation links can be automatically generated using `cxTranslateUrl` pipe. It 
     <a [routerLink]="'/unknown/url'"></a>
     ```
 
+### Limitations
+
+- There is no support for relative URLs. All translated URLs are absolute.
 
 ## Routes
 
-Angular's `Routes` need to contain a unique route name at property `data.cxPath` in order to be configurable and translatable. For example:
+Angular's `Routes` need to contain a unique name of route at property `data.cxPath` in order to be configurable and translatable. For example:
 
 ```typescript
 const routes: Routes = [
     {
-        /* cxPath: 'product' - is a unique route name that will be matched to routes translations */
+        /* cxPath: 'product' - is a unique name of route that will be matched to routes translations' keys */
         data: { cxPath: 'product' }
 
         /* path: null - the value will be replaced by the path from config (in application's bootstrap time) */
@@ -294,7 +309,7 @@ Then additional params are also needed in `{ route: <route> }` and `{ url: <url>
 1. `{ route: <route> }` needs also `productName` param:
 
     ```html
-    <a [routerLink]="{ route: [ { name: 'product', params: { productName: 'ABC', productCode: 1234 } } ] } | cxTranslateUrl"`></a>
+    <a [routerLink]="{ route: [ { name: 'product', params: { productName: 'ABC', productCode: 1234 } } ] } | cxTranslateUrl"></a>
     ```
 
     result:
@@ -340,14 +355,14 @@ Then additional params are also needed in `{ route: <route> }` and `{ url: <url>
     <a [routerLink]="['', 1234, 'custom', 'product-path', 'ABC']"></a>
     ```
 
-### Params mapping
+## Params mapping
 
-For extensibility purposes, it's a good idea to pass a big domain object (for example object with product details) with many unnecessary properties into params of `{ route: [{params: <params>, ...}] }`. Then the values from this object can be displayed in the in URL, if configured. But sometimes the names of object's properties don't match exactly to names of URL params in translations. Thanks to `paramsMapping`, they can be mapped. For example:
+When properties of given object do not match to names of parameters in configured url, the mapping can be also configured using `paramsMapping`. For example:
 
-Suppose there is an object `productDetails === { name: 'ABC', ... }`.
+The params object below does not contain property `productCode` but `code`:
 
 ```html
-<a [routerLink]="{ route: [ { name: 'product', params: productDetails ] | cxTranslateUrl"`></a>
+<a [routerLink]="{ route: [ { name: 'product', params: { code: 1234 } ] | cxTranslateUrl"></a>
 ```
 
 and config is
@@ -358,12 +373,14 @@ StorefrontModule.withConfig({
         translations: {
             default: {
                 product: {
-                    /* object's 'name' property will be mapped to path's 'productName' param */
-                    paramsMapping: { productName: 'name' }
+                    /* `:productCode` param will be filled with value of params object's `code` property */
+                    paramsMapping: { productCode: 'code' }
                 }
             }
             en: {
-                product: { paths: ['/p/:productCode/:productName'] },
+                product: { 
+                    paths: [':productCode/custom/product-path']
+                },
             }
         }
     }
@@ -376,13 +393,36 @@ result:
 <a [routerLink]="['', 1234, 'custom', 'product-path']"></a>
 ```
 
-#### Use `default` key for `paramsMapping`
+### Use `default` key for `paramsMapping`
 
-Not to repeat `paramsMapping` for every language key, it should be defined under `default` key.
+The routes' `paramsMapping` should be defined in under `default` key (not to repeat them  for all languages).
 
-#### Default params maping
+### Predefined default `paramsMaping`
 
-Some Storefront's routes have already predefined default `paramsMapping`. They can be found in [`defaut-storefront-routes-translations.ts`](./config/default-storefront-routes-translations.ts)
+Some Storefront's routes already have predefined default `paramsMapping`. They can be found in [`defaut-storefront-routes-translations.ts`](./config/default-storefront-routes-translations.ts).
+
+```typescript
+// defaut-storefront-routes-translations.ts
+
+default: {
+    product: {
+      paramsMapping: { productCode: 'code' }
+      /* ... */
+    },
+    category: {
+      paramsMapping: { categoryCode: 'code' }
+      /* ... */
+    },
+    orderDetails: {
+      paramsMapping: { orderCode: 'code' }
+      /* ... */
+    },
+    /* ... */
+}
+```
+
+
+
 
 ##### SUBJECTS OF CHANGE:
 
@@ -390,11 +430,11 @@ Some Storefront's routes have already predefined default `paramsMapping`. They c
 
 
 ## Disabling routes
-To disable a route (to remove it from Angular's router config and avoid translating URLs to this route) it suffices to do one of those things in the config:
+To disable a route (i.e. to remove it from Angular's router config and avoid translating URLs to this route) it suffices to do one of those things in the config:
 - set `null` for this route's name
 - set `null` or `[]` for route's paths
 
-Example:
+For example:
 
 ```typescript
 StorefrontModule.withConfig({
@@ -414,10 +454,12 @@ StorefrontModule.withConfig({
 })
 ```
 
-- `{ route: <route>} `
+Then links will remain in templates but won't be translated:
+
+1. For `{ route: <route> } `
 
     ```html
-    <a [routerLink]="{ route: [ { name: 'product', params: { productCode: 1234 } } ] } | cxTranslateUrl"`></a>
+    <a [routerLink]="{ route: [ { name: 'product', params: { productCode: 1234 } } ] } | cxTranslateUrl"></a>
     ```
 
     result
@@ -426,10 +468,10 @@ StorefrontModule.withConfig({
     <a [routerLink]="['/']"></a>
     ```
 
-- `{ url: <url>} `
+2. For `{ url: <url> } `
 
     ```html
-    <a [routerLink]="{ url: 'product/1234' } | cxTranslateUrl"`></a> 
+    <a [routerLink]="{ url: 'product/1234' } | cxTranslateUrl"></a> 
     ```
 
     result 
@@ -440,9 +482,82 @@ StorefrontModule.withConfig({
 
 ---
 
+## Children routes (nested routes)
+
+Children routes routes are configurable and translatable.
+
+### Config:
+
+When Angular's `Routes` contain **arrays** of `children` routes:
+
+```typescript
+const routes: Routes = [
+    {
+        data: { cxPath: 'parent' }, // route name
+        children: [
+            {
+                data: { cxPath: 'child' }, // route name
+                children: [
+                    {
+                        data: { cxPath: 'grandChild' }, // route name
+                        /* ... */ 
+                    }
+                ],
+                /* ... */
+            }
+        ],
+        /* ... */
+    }
+];
+```
+
+then config should contain **objects** with `children` routes translations:
+
+```typescript
+StorefrontModule.withConfig({
+    routesConfig: {
+        translations: {
+            en: {
+                parent: { // route name
+                    paths: ['parent-path/:param1'],
+                    children: {
+                        child: { // route name
+                            paths: ['child-path/:param2'],
+                            children: {
+                                grandChild: { // route name
+                                    paths: ['grand-child-path/:param3']
+                                }
+                            }
+                        },
+                    }
+                },
+            }
+        }
+    }
+})
+```
+
+Then to translate the URL of grand child's route, an array of routes from root (parent) to leaf (grand child) needs to be passed to `{ route: <route> }`. For example:
+
+```html
+<a [routerLink]="{ route: [ 
+    { name: 'parent',     params: { param1: 'value1' } }, 
+    { name: 'child',      params: { param2: 'value2' } },
+    { name: 'grandChild', params: { param3: 'value3' } }
+} | cxTranslateUrl">
+</a>
+```
+
+result:
+
+```html
+<a [routerLink]="['', 'parent-path', 'value1', 'child-path', 'value2', 'grand-child-path', 'value3']"></a>
+```
 
 
 ### Plans
+
+
 
 ### Work in progress:
 
