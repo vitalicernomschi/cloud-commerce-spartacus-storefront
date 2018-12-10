@@ -151,7 +151,7 @@ Navigation links can be automatically generated using `cxTranslateUrl` pipe. It 
     <a [routerLink]="['', 1234, 'custom', 'product-path']"></a>
     ```
 
-    #### What if `{ route: <route> }` cannot be translated?
+    **What if `{ route: <route> }` cannot be translated?**
 
     When URL cannot be translated from `{ route: <unknown-route> }` (for example due to typo in the route's name, mising necessary params or wrong config) *the root URL* `['/']` is returned:
     ```html
@@ -159,9 +159,18 @@ Navigation links can be automatically generated using `cxTranslateUrl` pipe. It 
     ```
 
     result:
+
     ```html
     <a [routerLink]="['/']"></a>
     ```
+
+    **Why `<route>` is an array?**
+
+    It's to support [children routes (nested routes)](#children-routes-nested-routes).
+
+    #### Can I pass the name of route as `string` instead of `{ name: <route-name> }` object?
+
+    Yes, when no params are neded for a route (for example `/cart`), then a string will suffice (for example `'cart'` instead of `{ name: 'cart' }`.
 
 
 2. transform an URL having a default shape into a configured URL: 
@@ -245,10 +254,6 @@ Navigation links can be automatically generated using `cxTranslateUrl` pipe. It 
     ```html
     <a [routerLink]="'/unknown/url'"></a>
     ```
-
-### Limitations
-
-- There is no support for relative URLs. All translated URLs are absolute.
 
 ## Routes
 
@@ -480,7 +485,161 @@ Then links will remain in templates but won't be translated:
     <a [routerLink]="'product/1234'"></a>
     ```
 
----
+## Path aliases
+
+There can be configured many path aliases that activate the same Angular's component. For example:
+
+```typescript
+StorefrontModule.withConfig({
+    routesConfig: {
+        translations: {
+            default: {
+                product: 
+                    paths: [
+                        ':campaignName/product/:productCode',
+                        'product/:productCode'
+                    ]
+                }
+            },
+            en: {
+                product: 
+                    paths: [
+                        ':campaignName/p/:productCode', /* will be used when `campaignName` param is given */
+                        'p/:productCode' /* will be used otherwise */
+                   ]
+                }
+            }
+        }
+    }
+})
+```
+
+To translate a URL there will be used **the first path** from the `paths` array **that can satisfy its params** with given params (more about common mistakes in section [The order in `paths` array matters](#the-order-in-paths-array-matters)). Example:
+
+1. With `{ route: <route> }`:
+    1. when `campaignName` param **is** given:
+    
+        ```html
+        <a [routerLink]="{ route: [ 
+            { name: 'product', params: { productCode: 1234, campaignName: 'sale' } } 
+        ] } | cxTranslateUrl"></a>
+        ```
+
+        result
+
+        ```html
+        <a [routerLink]="['', 'sale', 'p', '1234']"></a>
+        ```
+
+    2. when `campaignName` param **is not** given:
+
+        ```html
+        <a [routerLink]="{ route: [ { name: 'product', params: { productCode: 1234 } } ] } | cxTranslateUrl"></a>
+        ```
+
+        result
+
+        ```html
+        <a [routerLink]="['', 'p', '1234']"></a>
+        ```
+
+2. With `{ url: <url> }`:
+
+    1. when `campaignName` param **is** given:
+    
+        ```html
+        <a [routerLink]="{ url: 'sale/product/1234' | cxTranslateUrl"></a>
+        ```
+
+        result
+
+        ```html
+        <a [routerLink]="['', 'sale', 'p', '1234']"></a>
+        ```
+
+    2. when `campaignName` param **is not** given:
+
+        ```html
+        <a [routerLink]="{ url: 'product/1234' } | cxTranslateUrl"></a>
+        ```
+
+        result
+
+        ```html
+        <a [routerLink]="['', 'p', '1234']"></a>
+        ```
+    
+
+### The order in `paths` array matters
+
+When a path with less params (for example `/p/:productCode`) is put before a path that has the same params and more (for example `:campaignName/p/:productCode`), then the first path will **always** be used to translate URLs (and the second will **never** be used). For example:
+
+```typescript
+StorefrontModule.withConfig({
+    routesConfig: {
+        translations: {
+            default: {
+                product: 
+                    paths: [
+                        ':campaignName/product/:productCode',
+                        'product/:productCode'
+                    ]
+                }
+            },
+            en: {
+                product: 
+                    paths: [
+                        /* will always be used */
+                        'p/:productCode', 
+
+                        /* will never be used, because (among others) contains the same params as above */
+                        ':campaignName/p/:productCode'
+                   ]
+                }
+            }
+        }
+    }
+})
+```
+
+1. With `{ route: <route> }`:
+    1. when `campaignName` param **is** given:
+    
+        ```html
+        <a [routerLink]="{ route: [ 
+            { name: 'product', params: { productCode: 1234, campaignName: 'sale' } } 
+        ] } | cxTranslateUrl"></a>
+        ```
+
+    2. when `campaignName` param **is not** given:
+
+        ```html
+        <a [routerLink]="{ route: [ { name: 'product', params: { productCode: 1234 } } ] } | cxTranslateUrl"></a>
+        ```
+
+2. With `{ url: <url> }`:
+
+    1. when `campaignName` param **is** given:
+    
+        ```html
+        <a [routerLink]="{ url: 'sale/product/1234' | cxTranslateUrl"></a>
+        ```
+
+    2. when `campaignName` param **is not** given:
+
+        ```html
+        <a [routerLink]="{ url: 'product/1234' } | cxTranslateUrl"></a>
+        ```
+
+result for all:
+
+```html
+<a [routerLink]="['', 'p', '1234']"></a>
+```
+
+#### SUBJECTS OF CHANGE:
+
+- named aliases are planned to be added - to allow translating precise aliases of URLs and not to base only on the specificity of params
 
 ## Children routes (nested routes)
 
@@ -554,6 +713,25 @@ result:
 <a [routerLink]="['', 'parent-path', 'value1', 'child-path', 'value2', 'grand-child-path', 'value3']"></a>
 ```
 
+---
+
+
+
+## Limitations
+
+- Translated URLs are never relative, they are always absolute (with leading `''` in array):
+
+    ```html
+    <a [routerLink]="['', product, 1234]"></a>
+    ```
+
+    which equals the leading `/` in URL:
+
+    ```html
+    <a href="/product/1234"></a>
+    ```
+
+- Routing based on hash ([Angular's `HashLocationStrategy`](https://angular.io/guide/router#appendix-locationstrategy-and-browser-url-styles)) is not supported, for example `domain.com/#/some/route`.
 
 ### Plans
 
@@ -576,5 +754,3 @@ TODO: describe how it populates to all languages and how it changes behaviour of
 ### 'path' and 'route' could not be both
 
 
-### Path aliases
-When more than one path is configured for specific route name, then relevant `Route` object will be multiplied and each `Route` copy will have one `path` from configured `paths` list.
