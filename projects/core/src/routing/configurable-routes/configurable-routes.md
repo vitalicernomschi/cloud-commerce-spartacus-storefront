@@ -277,6 +277,36 @@ Navigation links can be automatically generated using `cxTranslateUrl` pipe. It 
     <a [routerLink]="['', 1234, 'custom', 'product-path']"></a>
     ```
 
+### Import `UrlTranslatorModule` from `@spartacus/core`
+
+In order to use `cxTranslateUrl` pipe in the template, its module firstly needs to import the `UrlTranslatorModule`. For example:
+
+Import `UrlTranslatorModule` in `feature.module.ts`:
+
+```typescript
+import { UrlTranslatorModule } from '@spartacus/core';
+import { FeatureComponent } from './feature.component';
+
+/*...*/
+
+@NgModule({
+  imports: [
+    UrlTranslatorModule,
+    /*...*/
+  ],
+  declarations: [FeatureComponent],
+  /*...*/
+ })
+export class FeatureModule {}
+```
+
+when `feature.component.html` uses `cxTranslateUrl` pipe:
+
+```html
+<!-- ... -->
+<a [routerLink]="{ route: <route> } | cxTranslateUrl"></a>
+<!-- ... -->
+```
 
 ## Routes
 
@@ -450,7 +480,7 @@ result:
 <a [routerLink]="['', 1234, 'custom', 'product-path']"></a>
 ```
 
-### Use `default` key for `paramsMapping`
+### Avoid params mapping per language - define them under `default` key
 
 The routes' `paramsMapping` should be defined in under `default` key (not to repeat them  for all languages).
 
