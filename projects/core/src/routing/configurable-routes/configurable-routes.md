@@ -20,13 +20,13 @@ Instead of it, the translations of paths can be defined in the Storefront's conf
   - [Routes with configurable `redirectTo`](#routes-with-configurable-redirectto)
 - [Params mapping](#params-mapping)
   - [Predefined `paramsMaping`](#predefined-paramsmaping)
+- [Children routes (nested routes)](#children-routes-nested-routes)
+- [Navigation in TypeScript code](#navigation-in-typescript-code)
+- [Translation of paths in TypeScript code](#translation-of-paths-in-typescript-code)
 - [Additional params](#additional-params)
 - [Disabling routes](#disabling-routes)
 - [Path aliases](#path-aliases)
   - [The order of path aliases](#the-order-of-path-aliases)
-- [Children routes (nested routes)](#children-routes-nested-routes)
-- [Navigation in TypeScript code](#navigation-in-typescript-code)
-- [Translation of paths in TypeScript code](#translation-of-paths-in-typescript-code)
 - [Fetching routes config from backend](#fetching-routes-config-from-backend)
   - [Extending static translations](#extending-static-translations)
 - [General Subjects of Change](#general-subjects-of-change)
@@ -346,6 +346,18 @@ Navigation links can be automatically generated in HTML templates using `cxTrans
     <a [routerLink]="['', 1234, 'custom', 'product-path']"></a>
     ```
 
+**Note:** Translated paths are never relative (they are always absolute - with leading `''` in array):
+
+```html
+<a [routerLink]="['', product, 1234]"></a>
+```
+
+which equals the leading `/` in the URL:
+
+```html
+<a href="/product/1234"></a>
+```
+
 ## Angular's `Routes`
 
 ### Routes with configurable `path`
@@ -478,6 +490,154 @@ default: {
 **SUBJECTS OF CHANGE:**
 
 - default `paramsMappings` are planned to be moved out from `@spartacus/core` and splitted in between the feature modules in `@spartacus/storefrontlib`
+
+
+## Children routes (nested routes)
+
+Children routes routes are configurable and translatable.
+
+When Angular's `Routes` contain **arrays** of `children` routes:
+
+```typescript
+const routes: Routes = [
+    {
+        data: { cxPath: 'parent' }, // route name
+        children: [
+            {
+                data: { cxPath: 'child' }, // route name
+                children: [
+                    {
+                        data: { cxPath: 'grandChild' }, // route name
+                        /* ... */ 
+                    }
+                ],
+                /* ... */
+            }
+        ],
+        /* ... */
+    }
+];
+```
+
+then config should contain **objects** with `children` routes translations:
+
+```typescript
+StorefrontModule.withConfig({
+    routesConfig: {
+        translations: {
+            en: {
+                parent: { // route name
+                    paths: ['parent-path/:param1'],
+                    children: {
+                        child: { // route name
+                            paths: ['child-path/:param2'],
+                            children: {
+                                grandChild: { // route name
+                                    paths: ['grand-child-path/:param3']
+                                }
+                            }
+                        },
+                    }
+                },
+            }
+        }
+    }
+})
+```
+
+Then to translate the path of grand child's route, an array of routes from root (parent) to leaf (grand child) needs to be passed to `{ route: <route> }`. For example:
+
+```html
+<a [routerLink]="{ route: [ 
+    { name: 'parent',     params: { param1: 'value1' } }, 
+    { name: 'child',      params: { param2: 'value2' } },
+    { name: 'grandChild', params: { param3: 'value3' } }
+} | cxTranslateUrl">
+</a>
+```
+
+result:
+
+```html
+<a [routerLink]="['', 'parent-path', 'value1', 'child-path', 'value2', 'grand-child-path', 'value3']"></a>
+```
+
+## Navigation in TypeScript code
+
+The `RoutingService.go` method called with `{ route: <route> }` or `{ url: <url> }` navigates to the translated path. For example:
+
+When config is:
+
+```typescript
+StorefrontModule.withConfig({
+    routesConfig: {
+        translations: {
+            default: {
+                product: { paths: ['p/:productCode'] }
+            }
+        }
+    }
+})
+```
+
+1. With `{ route: <route> }`:
+
+    ```typescript
+    routingService.go({ route: [ { name: 'product', params: { productCode: 1234 } } ] });
+
+    // router navigates to ['', 'p', 1234]
+    ```
+
+2. With `{ url: <url> }`:
+    ```typescript
+    routingService.go({ url: '/product/1234' });
+
+    // router navigates to ['', 'p', 1234]
+    ```
+
+**`RoutingService.go` called with an array**
+
+When `RoutingService.go` method is **called with an array**, then **no translation happens**. It just navigates to the path given in the array:
+
+```typescript
+routingService.go(['product', 1234]);
+
+// router navigates to ['product', 1234]
+```
+
+## Translation of paths in TypeScript code
+
+The `UrlTranslationService.translate` method called with `{ route: <route> }` or `{ url: <url> }` returns the translated path (just like `cxTranslateUrl` pipe in HTML templates). For example:
+
+When config is:
+
+```typescript
+StorefrontModule.withConfig({
+    routesConfig: {
+        translations: {
+            default: {
+                product: { paths: ['p/:productCode'] }
+            }
+        }
+    }
+})
+```
+
+1. With `{ route: <route> }`:
+
+    ```typescript
+    urlTranslatorService.translate({ route: [ { name: 'product', params: { productCode: 1234 } } ] });
+
+    // ['', 'p', 1234]
+    ```
+
+2. With `{ url: <url> }`:
+    ```typescript
+    urlTranslatorService.translate({ url: '/product/1234' });
+
+    // ['', 'p', 1234]
+    ```
+
 
 ## Additional params
 
@@ -760,152 +920,6 @@ result for all:
 
 - named aliases are under consideration - to allow translating precise aliases of paths and not to base only on the specificity of params
 
-## Children routes (nested routes)
-
-Children routes routes are configurable and translatable.
-
-When Angular's `Routes` contain **arrays** of `children` routes:
-
-```typescript
-const routes: Routes = [
-    {
-        data: { cxPath: 'parent' }, // route name
-        children: [
-            {
-                data: { cxPath: 'child' }, // route name
-                children: [
-                    {
-                        data: { cxPath: 'grandChild' }, // route name
-                        /* ... */ 
-                    }
-                ],
-                /* ... */
-            }
-        ],
-        /* ... */
-    }
-];
-```
-
-then config should contain **objects** with `children` routes translations:
-
-```typescript
-StorefrontModule.withConfig({
-    routesConfig: {
-        translations: {
-            en: {
-                parent: { // route name
-                    paths: ['parent-path/:param1'],
-                    children: {
-                        child: { // route name
-                            paths: ['child-path/:param2'],
-                            children: {
-                                grandChild: { // route name
-                                    paths: ['grand-child-path/:param3']
-                                }
-                            }
-                        },
-                    }
-                },
-            }
-        }
-    }
-})
-```
-
-Then to translate the path of grand child's route, an array of routes from root (parent) to leaf (grand child) needs to be passed to `{ route: <route> }`. For example:
-
-```html
-<a [routerLink]="{ route: [ 
-    { name: 'parent',     params: { param1: 'value1' } }, 
-    { name: 'child',      params: { param2: 'value2' } },
-    { name: 'grandChild', params: { param3: 'value3' } }
-} | cxTranslateUrl">
-</a>
-```
-
-result:
-
-```html
-<a [routerLink]="['', 'parent-path', 'value1', 'child-path', 'value2', 'grand-child-path', 'value3']"></a>
-```
-
-## Navigation in TypeScript code
-
-The `RoutingService.go` method called with `{ route: <route> }` or `{ url: <url> }` navigates to the translated path. For example:
-
-When config is:
-
-```typescript
-StorefrontModule.withConfig({
-    routesConfig: {
-        translations: {
-            default: {
-                product: { paths: ['p/:productCode'] }
-            }
-        }
-    }
-})
-```
-
-1. With `{ route: <route> }`:
-
-    ```typescript
-    routingService.go({ route: [ { name: 'product', params: { productCode: 1234 } } ] });
-
-    // router navigates to ['', 'p', 1234]
-    ```
-
-2. With `{ url: <url> }`:
-    ```typescript
-    routingService.go({ url: '/product/1234' });
-
-    // router navigates to ['', 'p', 1234]
-    ```
-
-**`RoutingService.go` called with an array**
-
-When `RoutingService.go` method is **called with an array**, then **no translation happens**. It just navigates to the path given in the array:
-
-```typescript
-routingService.go(['product', 1234]);
-
-// router navigates to ['product', 1234]
-```
-
-## Translation of paths in TypeScript code
-
-The `UrlTranslationService.translate` method called with `{ route: <route> }` or `{ url: <url> }` returns the translated path (just like `cxTranslateUrl` pipe in HTML templates). For example:
-
-When config is:
-
-```typescript
-StorefrontModule.withConfig({
-    routesConfig: {
-        translations: {
-            default: {
-                product: { paths: ['p/:productCode'] }
-            }
-        }
-    }
-})
-```
-
-1. With `{ route: <route> }`:
-
-    ```typescript
-    urlTranslatorService.translate({ route: [ { name: 'product', params: { productCode: 1234 } } ] });
-
-    // ['', 'p', 1234]
-    ```
-
-2. With `{ url: <url> }`:
-    ```typescript
-    urlTranslatorService.translate({ url: '/product/1234' });
-
-    // ['', 'p', 1234]
-    ```
-
 ## Fetching routes config from backend
 
 When `fetch` is set to `true` in `routesConfig`, app will wait with bootstraping until translations of routes are succesfully fetched from backend's URL `<baseUrl>/routes-config`. Example:
@@ -1002,17 +1016,4 @@ When request for translations fails after 2 automatic retries, then a fatal erro
 - Lazy loaded routes are currently not supported (they can't be configurable and translatable), but they are planned to be supported
 
 ## General Limitations
-
-- Translated paths are never relative, they are always absolute (with leading `''` in array):
-
-    ```html
-    <a [routerLink]="['', product, 1234]"></a>
-    ```
-
-    which equals the leading `/` in the URL:
-
-    ```html
-    <a href="/product/1234"></a>
-    ```
-
 - Routing based on hash ([Angular's `HashLocationStrategy`](https://angular.io/guide/router#appendix-locationstrategy-and-browser-url-styles)) is not supported, for example `domain.com/#/some/route`.
