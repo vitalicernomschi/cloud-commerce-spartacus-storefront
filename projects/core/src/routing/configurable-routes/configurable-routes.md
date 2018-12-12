@@ -13,10 +13,9 @@ Instead of it, the translations of paths can be defined in the Storefront's conf
 - [Config](#config)
   - [Predefined config](#predefined-config)
   - [Extending predefined config](#extending-predefined-config)
-  - [Always include params from `default` paths](#always-include-params-from-default-paths)
-  - [Routes config can be also fetched from backend](#routes-config-can-be-also-fetched-from-backend)
+  - [Always use params from predefined config](#always-use-params-from-predefined-config)
 - [Navigation links](#navigation-links)
-- [Routes](#routes)
+- [Angular's `Routes`](#angulars-routes)
   - [Routes with configurable `path`](#routes-with-configurable-path)
   - [Routes with configurable `redirectTo`](#routes-with-configurable-redirectto)
 - [Additional params](#additional-params)
@@ -26,9 +25,9 @@ Instead of it, the translations of paths can be defined in the Storefront's conf
 - [Path aliases](#path-aliases)
   - [The order of path aliases](#the-order-of-path-aliases)
 - [Children routes (nested routes)](#children-routes-nested-routes)
-- [Navigation to translated path in TypeScript code](#navigation-to-translated-path-in-typescript-code)
-- [Translation of path in TypeScript code](#translation-of-path-in-typescript-code)
-- [Fetching translations of routes from backend](#fetching-translations-of-routes-from-backend)
+- [Navigation in TypeScript code](#navigation-in-typescript-code)
+- [Translation of paths in TypeScript code](#translation-of-paths-in-typescript-code)
+- [Fetching routes config from backend](#fetching-routes-config-from-backend)
   - [Extending static translations](#extending-static-translations)
 - [General Subjects of Change](#general-subjects-of-change)
 - [General Limitations](#general-limitations)
@@ -130,7 +129,7 @@ Every part of default config can be extended and overwritten in the Shell App, u
 - objects **extend** predefined objects
 - values (primitives, arrays, `null`) **overwrite** predefined values
 
-### Always include params from `default` paths
+### Always use params from predefined config
 
 All params that appear in predefined paths (for example `:productCode` param in `product/:productCode` path) mustn't be omitted in overwritten paths. Otherwise Storefront's components may break. For example please **don't do**:
 
@@ -146,9 +145,9 @@ StorefrontModule.withConfig({
 })
 ```
 
-### Routes config can be also fetched from backend
+**Routes config can be also fetched from backend**
 
-More in the section [Fetching translations of routes from backend](#fetching-translations-of-routes-from-backend).
+More in the section [Fetching routes config from backend](#fetching-routes-config-from-backend).
 
 **LIMITATIONS:**
 
@@ -346,7 +345,7 @@ Navigation links can be automatically generated in HTML templates using `cxTrans
     <a [routerLink]="['', 1234, 'custom', 'product-path']"></a>
     ```
 
-## Routes
+## Angular's `Routes`
 
 ### Routes with configurable `path`
 
@@ -635,7 +634,7 @@ StorefrontModule.withConfig({
 })
 ```
 
-To translate the path there will be used **the first path** from the `paths` array **that can satisfy its params** with given params (more about common mistakes in section [The order of path aliases](#order-of-path-aliases)). Example:
+To translate the path there will be used **the first path** from the `paths` array **that can satisfy its params** with given params (more about common mistakes in section [The order of path aliases](#the-order-of-path-aliases)). Example:
 
 1. With `{ route: <route> }`:
     1. when `campaignName` param **is** given:
@@ -831,7 +830,7 @@ result:
 <a [routerLink]="['', 'parent-path', 'value1', 'child-path', 'value2', 'grand-child-path', 'value3']"></a>
 ```
 
-## Navigation to translated path in TypeScript code
+## Navigation in TypeScript code
 
 The `RoutingService.go` method called with `{ route: <route> }` or `{ url: <url> }` navigates to the translated path. For example:
 
@@ -874,7 +873,7 @@ routingService.go(['product', 1234]);
 // router navigates to ['product', 1234]
 ```
 
-## Translation of path in TypeScript code
+## Translation of paths in TypeScript code
 
 The `UrlTranslationService.translate` method called with `{ route: <route> }` or `{ url: <url> }` returns the translated path (just like `cxTranslateUrl` pipe in HTML templates). For example:
 
@@ -907,7 +906,7 @@ StorefrontModule.withConfig({
     // ['', 'p', 1234]
     ```
 
-## Fetching translations of routes from backend
+## Fetching routes config from backend
 
 When `fetch` is set to `true` in `routesConfig`, app will wait with bootstraping until translations of routes are succesfully fetched from backend's URL `<baseUrl>/routes-config`. Example:
 
