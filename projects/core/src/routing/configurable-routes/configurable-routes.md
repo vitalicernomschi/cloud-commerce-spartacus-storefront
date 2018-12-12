@@ -11,22 +11,13 @@ Instead of it, the translations of paths can be defined in the Storefront's conf
 
 ## Prerequisites
 
-- Import `UrlTranslatorModule` in every module that translates paths in HTML templates. For example:
+- Import `ConfigurableRoutesModule` in `StorefrontModule`
+- Import `UrlTranslatorModule` in every feature's module that [translates navigation links in templates](#navigation-links)
+- Set active language using `ConfigurableRoutesService.translateRouterConfig(<languageCode>)` in `StorefrontComponent`
 
-    ```typescript
-    // feature.module.ts:
+**SUBJECTS OF CHANGE:**
 
-    import { UrlTranslatorModule } from '@spartacus/core';
-    /*...*/
-    @NgModule({
-    imports: [
-        UrlTranslatorModule,
-        /*...*/
-    ],
-    /*...*/
-    })
-    export class FeatureModule {}
-    ```
+- setting active language is planned to be moved out from `StorefrontComponent`
 
 ## Routes config
 
@@ -50,13 +41,12 @@ default: {
 
 - default config is planned to be moved out from `@spartacus/core` and splitted in between the feature modules in `@spartacus/storefrontlib`
 
-
 ### Extending config
 
 Every part of default config can be extended and overwritten in the Shell App, using `StorefrontModule.withConfig`:
 
 1. for all languages (`default` key):
-   
+
     ```typescript
     StorefrontModule.withConfig({
         routesConfig: {
@@ -229,7 +219,6 @@ Navigation links can be automatically generated in HTML templates using `cxTrans
 
     It's to support [children routes (nested routes)](#children-routes-nested-routes).
 
-
 2. transform a path having a default shape into a configured path: 
     ```typescript
     { url: <url> } | cxTranslateUrl
@@ -297,7 +286,6 @@ Navigation links can be automatically generated in HTML templates using `cxTrans
         <a [routerLink]="['', 1234, 'custom', 'product-path']"></a>
         ```
 
-
     **What if `{ url: <url> }` cannot be translated?**
 
     When the path cannot be translated from `{ url: <unknown-url> }` (for example due to unexpected shape of the URL, or wrong config) *the original URL* is returned:
@@ -307,7 +295,7 @@ Navigation links can be automatically generated in HTML templates using `cxTrans
     ```
 
     result:
-    
+
     ```html
     <a [routerLink]="'/unknown/url'"></a>
     ```
@@ -329,7 +317,7 @@ Navigation links can be automatically generated in HTML templates using `cxTrans
     ```
 
     result in:
-    
+
     ```html
     <a [routerLink]="['', 1234, 'custom', 'product-path']"></a>
     ```
@@ -364,7 +352,6 @@ It's because Angular requires any defined `path` in compilation time.
 - `cxPath` property is planned to be replaced with other property (not known now) containing a default route's config (which will be moved out from [`defaut-storefront-routes-translations.ts`](./config/default-storefront-routes-translations.ts) and splitted in between feature modules)
 - `path` is considered to contain the first default [path alias](#path-aliases)
 
-
 ### Routes with configurable `redirectTo`
 
 Analogically, a unique name of route is needed at property `data.cxRedirectTo` of Angular's `Routes` in order to have configurable and translatable `redirectTo`. For example:
@@ -392,7 +379,6 @@ When both `cxPath` and `cxRedirectTo` are defined, then the route won't be trans
 **Property `redirectTo` cannot be left `undefined`**
 
 It's because Angular requires any defined `redirectTo` in compilation time.
-
 
 **SUBJECTS OF CHANGE**:
 
@@ -549,6 +535,7 @@ default: {
 
 ## Disabling routes
 To disable a route (i.e. to remove it from Angular's router config and avoid translating paths to this route) it suffices to do one of those things in the config:
+
 - set `null` for this route's name
 - set `null` or `[]` for route's paths
 
@@ -631,7 +618,7 @@ To translate the path there will be used **the first path** from the `paths` arr
 
 1. With `{ route: <route> }`:
     1. when `campaignName` param **is** given:
-    
+
         ```html
         <a [routerLink]="{ route: [ 
             { name: 'product', params: { productCode: 1234, campaignName: 'sale' } } 
@@ -659,7 +646,7 @@ To translate the path there will be used **the first path** from the `paths` arr
 2. With `{ url: <url> }`:
 
     1. when `campaignName` param **is** given:
-    
+
         ```html
         <a [routerLink]="{ url: '/sale/product/1234' } | cxTranslateUrl"></a>
         ```
@@ -733,7 +720,7 @@ StorefrontModule.withConfig({
 2. With `{ url: <url> }`:
 
     1. when `campaignName` param **is** given:
-    
+
         ```html
         <a [routerLink]="{ url: '/sale/product/1234' } | cxTranslateUrl"></a>
         ```
@@ -826,7 +813,7 @@ result:
 <a [routerLink]="['', 'parent-path', 'value1', 'child-path', 'value2', 'grand-child-path', 'value3']"></a>
 ```
 
-## Navigation to translated path in TypeScript code
+## `RoutingService.go` - navigation to translated path in TypeScript code
 
 The `RoutingService.go` method called with `{ route: <route> }` or `{ url: <url> }` navigates to the translated path. For example:
 
@@ -848,7 +835,7 @@ StorefrontModule.withConfig({
 
     ```typescript
     routingService.go({ route: [ { name: 'product', params: { productCode: 1234 } } ] });
-    
+
     // router navigates to ['', 'p', 1234]
     ```
 
@@ -859,7 +846,7 @@ StorefrontModule.withConfig({
     // router navigates to ['', 'p', 1234]
     ```
 
-#### `RoutingService.go` called with an array
+### `RoutingService.go` called with an array
 
 When `RoutingService.go` method is **called with an array**, then **no translation happens**. It just navigates to the path given in the array:
 
@@ -869,9 +856,9 @@ routingService.go(['product', 1234]);
 // router navigates to ['product', 1234]
 ```
 
-## Translation of path in TypeScript code
+## `UrlTranslationService.translate` - translation of path in TypeScript code
 
-The `UrlTranslatorService.translate` method called with `{ route: <route> }` or `{ url: <url> }` returns the translated path (just like `cxTranslateUrl` pipe in HTML templates). For example:
+The `UrlTranslationService.translate` method called with `{ route: <route> }` or `{ url: <url> }` returns the translated path (just like `cxTranslateUrl` pipe in HTML templates). For example:
 
 When config is:
 
@@ -898,7 +885,7 @@ StorefrontModule.withConfig({
 2. With `{ url: <url> }`:
     ```typescript
     urlTranslatorService.translate({ url: '/product/1234' });
-    
+
     // ['', 'p', 1234]
     ```
 
@@ -919,21 +906,21 @@ StorefrontModule.withConfig({
 
 ### Extending static translations with fetched
 
-When `routesConfig` contains staticaly defined `translations` and `fetch` set to `true`, then the fetched routes translations will extend those staticaly defined (the same as static translations extend default).     But fetched translations have the highest priority. For example:
+When `routesConfig` contains statically defined `translations` and also `fetch` set to `true`, then the  static routes translations will be extended by the fetched ones (the same as static translations extend the predefined ones). For example:
 
-JSON returned by `<base-server-url>/routes-config`:
+JSON returned by `<base-server-url>/routes-config` will have the *highest priority*:
 
 ```typescript
 {
     "translations": {
-        "en": {
-            "product": { "paths": ["p/:product-code"] },
+        "default": {
+            "product": { "paths": [":productCode/custom/product-path"] },
         }
     }
 }
 ```
 
-and the static config contains `translations` and `fetch` set to true: 
+Static config will have *medium priority*:
 
 ```typescript
 StorefrontModule.withConfig({
@@ -943,51 +930,61 @@ StorefrontModule.withConfig({
     routesConfig: { 
         fetch: true,
         translations: {
-            en: {
-                product: { paths: [':productCode/custom/product-path'] },
-                cart: { paths: ['custom/cart-path'] }
+            default: {
+                product: { paths: ['p/:product-code'] },
+                category: { paths: ['c/:categoryCode'] }
             }
         }
     }
 })
 ```
 
-Then the final translations of `product` and `cart` routes will be:
+And predefined translations have the *lowest priority*:
+
+```typescript
+default {
+    product: { paths: ['product/:productCode'] },
+    category: { paths: ['category/:categoryCode'] }
+    cart: { paths: ['cart'] },
+    /* ... */
+},
+/* ... */
+```
+
+Then the final translations will be:
 
 ```typescript
 translations: {
-    en: {
-        product: { paths: ['p/:productCode'] }, // fetched values override staticaly defined
-        cart: { paths: ['custom/cart-path'] }
-    }
+    /* ... */
+    default: {
+        product: { paths: [":productCode/custom/product-path"] }, // fetched
+        cart: { paths: ['custom/cart-path'] },                    // static
+        category: { paths: ['category/:categoryCode'] }           // predefined
+        /* ... */
+    },
+    /* ... */
 }
 ```
 
 **What if translations cannot be fetched**
 
-When request for translations fails after 2 retries (performed automatically), then a fatal error is thrown and unfortunately app crashes.
+When request for translations fails after 2 automatic retries, then a fatal error is thrown and unfortunately the app crashes.
 
 **SUBJECTS OF CHANGE:**
 
 - a better way of handling the failure is under consideration
 
-### Extending staticaly defined translations of routes
-
-When 
-
- Application will wait for translations of routes to be fetched first, and then it will be bootstraped.
-
-When configuration cannot be fetched after 3 retiries, app will crash
-
-### Limitations of fetching translaions
+**LIMITATIONS:**
 
 - Endpoint with translations of routes is not configurable. It's always `<baseUrl>/routes-config`
 
-## Other subjects of change
+---
+
+## General Subjects of Change
 
 - Routes for 4 CMS content pages: `contact`, `help`, `sale`, `termsAndConditions` are planned to be removed from the configuration as they shouldn't be separate configurable routes.
 
-## Limitations
+## General Limitations
 
 - Translated paths are never relative, they are always absolute (with leading `''` in array):
 
