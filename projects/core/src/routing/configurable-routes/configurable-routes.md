@@ -1,4 +1,4 @@
-# Configurable routes
+# Configurable routes <!-- omit in toc -->
 
 Path to every route in Storefront and Shell App can be configurable and translatable. This means that we don't have to hardcode paths in templates and in the code anymore.
 
@@ -7,13 +7,31 @@ Instead of it, the translations of paths can be defined in the Storefront's conf
 - a unique name of route and params object, or
 - a path having a default shape
 
-## Table of contents
-<!-- START doctoc -->
-<!-- END doctoc -->
+## Table of contents <!-- omit in toc -->
 
-
----
-
+- [Prerequisites](#prerequisites)
+- [Config](#config)
+  - [Predefined config](#predefined-config)
+  - [Extending predefined config](#extending-predefined-config)
+  - [Always include params from `default` paths](#always-include-params-from-default-paths)
+  - [Routes config can be also fetched from backend](#routes-config-can-be-also-fetched-from-backend)
+- [Navigation links](#navigation-links)
+- [Routes](#routes)
+  - [Routes with configurable `path`](#routes-with-configurable-path)
+  - [Routes with configurable `redirectTo`](#routes-with-configurable-redirectto)
+- [Additional params](#additional-params)
+- [Params mapping](#params-mapping)
+  - [Predefined `paramsMaping`](#predefined-paramsmaping)
+- [Disabling routes](#disabling-routes)
+- [Path aliases](#path-aliases)
+  - [The order of path aliases](#the-order-of-path-aliases)
+- [Children routes (nested routes)](#children-routes-nested-routes)
+- [Navigation to translated path in TypeScript code](#navigation-to-translated-path-in-typescript-code)
+- [Translation of path in TypeScript code](#translation-of-path-in-typescript-code)
+- [Fetching translations of routes from backend](#fetching-translations-of-routes-from-backend)
+  - [Extending static translations](#extending-static-translations)
+- [General Subjects of Change](#general-subjects-of-change)
+- [General Limitations](#general-limitations)
 
 ## Prerequisites
 
@@ -25,9 +43,9 @@ Instead of it, the translations of paths can be defined in the Storefront's conf
 
 - setting active language is planned to be moved out from `StorefrontComponent`
 
-## Routes config
+## Config
 
-### Predefined translations
+### Predefined config
 
 The predefined routes config for Storefront's pages can be found in [`defaut-storefront-routes-translations.ts`](./config/default-storefront-routes-translations.ts).
 
@@ -47,7 +65,7 @@ default: {
 
 - default config is planned to be moved out from `@spartacus/core` and splitted in between the feature modules in `@spartacus/storefrontlib`
 
-### Extending config
+### Extending predefined config
 
 Every part of default config can be extended and overwritten in the Shell App, using `StorefrontModule.withConfig`:
 
@@ -107,16 +125,16 @@ Every part of default config can be extended and overwritten in the Shell App, u
 
     Then the path of product page will have shape `:productCode/custom/product-path` only in English. But in every other language it will have the (overwritten) default shape `p/:productCode`.
 
-**How the predefined config is extended**
+**How predefined config is extended**
 
 - objects **extend** predefined objects
 - values (primitives, arrays, `null`) **overwrite** predefined values
 
-**Always include params from `default` paths**
+### Always include params from `default` paths
 
 All params that appear in predefined paths (for example `:productCode` param in `product/:productCode` path) mustn't be omitted in overwritten paths. Otherwise Storefront's components may break. For example please **don't do**:
 
- ```typescript
+```typescript
 StorefrontModule.withConfig({
     routesConfig: {
         translations: {
@@ -128,7 +146,7 @@ StorefrontModule.withConfig({
 })
 ```
 
-**Routes config can be also fetched from backend**
+### Routes config can be also fetched from backend
 
 More in the section [Fetching translations of routes from backend](#fetching-translations-of-routes-from-backend).
 
@@ -507,7 +525,7 @@ result:
 
 The routes' `paramsMapping` should be defined in under `default` key (not to repeat them  for all languages).
 
-### Predefined default `paramsMaping`
+### Predefined `paramsMaping`
 
 Some Storefront's routes already have predefined default `paramsMapping`. They can be found in [`defaut-storefront-routes-translations.ts`](./config/default-storefront-routes-translations.ts).
 
@@ -617,7 +635,7 @@ StorefrontModule.withConfig({
 })
 ```
 
-To translate the path there will be used **the first path** from the `paths` array **that can satisfy its params** with given params (more about common mistakes in section [Order of path aliases](#order-of-path-aliases)). Example:
+To translate the path there will be used **the first path** from the `paths` array **that can satisfy its params** with given params (more about common mistakes in section [The order of path aliases](#order-of-path-aliases)). Example:
 
 1. With `{ route: <route> }`:
     1. when `campaignName` param **is** given:
@@ -672,7 +690,7 @@ To translate the path there will be used **the first path** from the `paths` arr
         <a [routerLink]="['', 'p', '1234']"></a>
         ```
 
-### Order of path aliases
+### The order of path aliases
 
 When a path with less params (for example `/p/:productCode`) is put before a path that has the same params and more (for example `:campaignName/p/:productCode`), then the first path will **always** be used to translate the path (and the second will **never** be used). For example:
 
@@ -813,7 +831,7 @@ result:
 <a [routerLink]="['', 'parent-path', 'value1', 'child-path', 'value2', 'grand-child-path', 'value3']"></a>
 ```
 
-## `RoutingService.go` - navigation to translated path in TypeScript code
+## Navigation to translated path in TypeScript code
 
 The `RoutingService.go` method called with `{ route: <route> }` or `{ url: <url> }` navigates to the translated path. For example:
 
@@ -846,7 +864,7 @@ StorefrontModule.withConfig({
     // router navigates to ['', 'p', 1234]
     ```
 
-### `RoutingService.go` called with an array
+**`RoutingService.go` called with an array**
 
 When `RoutingService.go` method is **called with an array**, then **no translation happens**. It just navigates to the path given in the array:
 
@@ -856,7 +874,7 @@ routingService.go(['product', 1234]);
 // router navigates to ['product', 1234]
 ```
 
-## `UrlTranslationService.translate` - translation of path in TypeScript code
+## Translation of path in TypeScript code
 
 The `UrlTranslationService.translate` method called with `{ route: <route> }` or `{ url: <url> }` returns the translated path (just like `cxTranslateUrl` pipe in HTML templates). For example:
 
@@ -978,7 +996,6 @@ When request for translations fails after 2 automatic retries, then a fatal erro
 
 - Endpoint with translations of routes is not configurable. It's always `<baseUrl>/routes-config`
 
----
 
 ## General Subjects of Change
 
