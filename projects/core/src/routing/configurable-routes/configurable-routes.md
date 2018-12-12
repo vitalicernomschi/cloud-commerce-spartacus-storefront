@@ -345,7 +345,7 @@ const routes: Routes = [
 
 **Property `path` cannot be left `undefined`**
 
-It's because Angular requires any defined `path` in compilation time.
+Angular requires any defined `path` in compilation time.
 
 **SUBJECTS OF CHANGE:**
 
@@ -378,12 +378,12 @@ When both `cxPath` and `cxRedirectTo` are defined, then the route won't be trans
 
 **Property `redirectTo` cannot be left `undefined`**
 
-It's because Angular requires any defined `redirectTo` in compilation time.
+Angular requires any defined `redirectTo` in compilation time.
 
 **SUBJECTS OF CHANGE**:
 
 - `cxRedirectTo` property is planned to be replaced with other property together with `cxPath`
-- `cxRedirectTo` property is planned to accept an array of nested routes' names instead of string in order to support redirects to nested routes
+- `cxRedirectTo` property is planned to accept an array of routes' names instead of string - in order to support redirects to nested routes
 
 
 ## Additional params
@@ -983,6 +983,7 @@ When request for translations fails after 2 automatic retries, then a fatal erro
 ## General Subjects of Change
 
 - Routes for 4 CMS content pages: `contact`, `help`, `sale`, `termsAndConditions` are planned to be removed from the configuration as they shouldn't be separate configurable routes.
+- Lazy loaded routes are currently not supported (they can't be configurable and translatable), but they are planned to be supported
 
 ## General Limitations
 
