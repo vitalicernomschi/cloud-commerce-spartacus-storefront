@@ -1,13 +1,19 @@
 # Configurable routes
 
-TODO: add table of contents
-
 Path to every route in Storefront and Shell App can be configurable and translatable. This means that we don't have to hardcode paths in templates and in the code anymore.
 
 Instead of it, the translations of paths can be defined in the Storefront's config. Then the translated paths will be generated in templates and in the code, basing on given information:
 
 - a unique name of route and params object, or
 - a path having a default shape
+
+## Table of contents
+<!-- START doctoc -->
+<!-- END doctoc -->
+
+
+---
+
 
 ## Prerequisites
 
@@ -21,7 +27,7 @@ Instead of it, the translations of paths can be defined in the Storefront's conf
 
 ## Routes config
 
-### Predefined config
+### Predefined translations
 
 The predefined routes config for Storefront's pages can be found in [`defaut-storefront-routes-translations.ts`](./config/default-storefront-routes-translations.ts).
 
@@ -101,12 +107,12 @@ Every part of default config can be extended and overwritten in the Shell App, u
 
     Then the path of product page will have shape `:productCode/custom/product-path` only in English. But in every other language it will have the (overwritten) default shape `p/:productCode`.
 
-#### How the predefined config is extended
+**How the predefined config is extended**
 
 - objects **extend** predefined objects
 - values (primitives, arrays, `null`) **overwrite** predefined values
 
-#### Always include params from `default` paths
+**Always include params from `default` paths**
 
 All params that appear in predefined paths (for example `:productCode` param in `product/:productCode` path) mustn't be omitted in overwritten paths. Otherwise Storefront's components may break. For example please **don't do**:
 
@@ -122,7 +128,7 @@ StorefrontModule.withConfig({
 })
 ```
 
-#### Routes config can be also fetched from backend
+**Routes config can be also fetched from backend**
 
 More in the section [Fetching translations of routes from backend](#fetching-translations-of-routes-from-backend).
 
@@ -497,7 +503,7 @@ result:
 <a [routerLink]="['', 1234, 'custom', 'product-path']"></a>
 ```
 
-### Avoid params mapping per language - define them under `default` key
+**Avoid params mapping per language - define them under `default` key**
 
 The routes' `paramsMapping` should be defined in under `default` key (not to repeat them  for all languages).
 
@@ -525,15 +531,12 @@ default: {
 }
 ```
 
-
-
-
 **SUBJECTS OF CHANGE:**
 
 - default `paramsMappings` are planned to be moved out from `@spartacus/core` and splitted in between the feature modules in `@spartacus/storefrontlib`
 
-
 ## Disabling routes
+
 To disable a route (i.e. to remove it from Angular's router config and avoid translating paths to this route) it suffices to do one of those things in the config:
 
 - set `null` for this route's name
@@ -614,7 +617,7 @@ StorefrontModule.withConfig({
 })
 ```
 
-To translate the path there will be used **the first path** from the `paths` array **that can satisfy its params** with given params (more about common mistakes in section [The order in `paths` array matters](#the-order-in-paths-array-matters)). Example:
+To translate the path there will be used **the first path** from the `paths` array **that can satisfy its params** with given params (more about common mistakes in section [Order of path aliases](#order-of-path-aliases)). Example:
 
 1. With `{ route: <route> }`:
     1. when `campaignName` param **is** given:
@@ -669,8 +672,7 @@ To translate the path there will be used **the first path** from the `paths` arr
         <a [routerLink]="['', 'p', '1234']"></a>
         ```
 
-
-### The order in `paths` array matters
+### Order of path aliases
 
 When a path with less params (for example `/p/:productCode`) is put before a path that has the same params and more (for example `:campaignName/p/:productCode`), then the first path will **always** be used to translate the path (and the second will **never** be used). For example:
 
@@ -744,8 +746,6 @@ result for all:
 ## Children routes (nested routes)
 
 Children routes routes are configurable and translatable.
-
-### Config:
 
 When Angular's `Routes` contain **arrays** of `children` routes:
 
@@ -904,7 +904,7 @@ StorefrontModule.withConfig({
 })
 ```
 
-### Extending static translations with fetched
+### Extending static translations
 
 When `routesConfig` contains statically defined `translations` and also `fetch` set to `true`, then the  static routes translations will be extended by the fetched ones (the same as static translations extend the predefined ones). For example:
 
