@@ -18,9 +18,9 @@ Instead of it, the translations of paths can be defined in the Storefront's conf
 - [Angular's `Routes`](#angulars-routes)
   - [Routes with configurable `path`](#routes-with-configurable-path)
   - [Routes with configurable `redirectTo`](#routes-with-configurable-redirectto)
-- [Additional params](#additional-params)
 - [Params mapping](#params-mapping)
   - [Predefined `paramsMaping`](#predefined-paramsmaping)
+- [Additional params](#additional-params)
 - [Disabling routes](#disabling-routes)
 - [Path aliases](#path-aliases)
   - [The order of path aliases](#the-order-of-path-aliases)
@@ -41,6 +41,7 @@ Instead of it, the translations of paths can be defined in the Storefront's conf
 **SUBJECTS OF CHANGE:**
 
 - setting active language is planned to be moved out from `StorefrontComponent`
+
 
 ## Config
 
@@ -408,6 +409,75 @@ Angular requires any defined `redirectTo` in compilation time.
 - `cxRedirectTo` property is planned to be replaced with other property together with `cxPath`
 - `cxRedirectTo` property is planned to accept an array of routes' names instead of string - in order to support redirects to nested routes
 
+## Params mapping
+
+When properties of given object do not match to names of parameters in configured url, the mapping can be also configured using `paramsMapping`. For example:
+
+The params object below does not contain property `productCode` but `code`:
+
+```html
+<a [routerLink]="{ route: [ { name: 'product', params: { code: 1234 } ] | cxTranslateUrl"></a>
+```
+
+and config is
+
+```typescript
+StorefrontModule.withConfig({
+    routesConfig: {
+        translations: {
+            default: {
+                product: {
+                    /* `:productCode` param will be filled with value of params object's `code` property */
+                    paramsMapping: { productCode: 'code' }
+                }
+            }
+            en: {
+                product: { 
+                    paths: [':productCode/custom/product-path']
+                },
+            }
+        }
+    }
+})
+```
+
+result:
+
+```html
+<a [routerLink]="['', 1234, 'custom', 'product-path']"></a>
+```
+
+**Avoid params mapping per language - define them under `default` key**
+
+The routes' `paramsMapping` should be defined in under `default` key (not to repeat them  for all languages).
+
+### Predefined `paramsMaping`
+
+Some Storefront's routes already have predefined default `paramsMapping`. They can be found in [`defaut-storefront-routes-translations.ts`](./config/default-storefront-routes-translations.ts).
+
+```typescript
+// defaut-storefront-routes-translations.ts
+
+default: {
+    product: {
+      paramsMapping: { productCode: 'code' }
+      /* ... */
+    },
+    category: {
+      paramsMapping: { categoryCode: 'code' }
+      /* ... */
+    },
+    orderDetails: {
+      paramsMapping: { orderCode: 'code' }
+      /* ... */
+    },
+    /* ... */
+}
+```
+
+**SUBJECTS OF CHANGE:**
+
+- default `paramsMappings` are planned to be moved out from `@spartacus/core` and splitted in between the feature modules in `@spartacus/storefrontlib`
 
 ## Additional params
 
@@ -481,76 +551,6 @@ Then additional params are also needed in `{ route: <route> }` and `{ url: <url>
     ```html
     <a [routerLink]="['', 1234, 'custom', 'product-path', 'ABC']"></a>
     ```
-
-## Params mapping
-
-When properties of given object do not match to names of parameters in configured url, the mapping can be also configured using `paramsMapping`. For example:
-
-The params object below does not contain property `productCode` but `code`:
-
-```html
-<a [routerLink]="{ route: [ { name: 'product', params: { code: 1234 } ] | cxTranslateUrl"></a>
-```
-
-and config is
-
-```typescript
-StorefrontModule.withConfig({
-    routesConfig: {
-        translations: {
-            default: {
-                product: {
-                    /* `:productCode` param will be filled with value of params object's `code` property */
-                    paramsMapping: { productCode: 'code' }
-                }
-            }
-            en: {
-                product: { 
-                    paths: [':productCode/custom/product-path']
-                },
-            }
-        }
-    }
-})
-```
-
-result:
-
-```html
-<a [routerLink]="['', 1234, 'custom', 'product-path']"></a>
-```
-
-**Avoid params mapping per language - define them under `default` key**
-
-The routes' `paramsMapping` should be defined in under `default` key (not to repeat them  for all languages).
-
-### Predefined `paramsMaping`
-
-Some Storefront's routes already have predefined default `paramsMapping`. They can be found in [`defaut-storefront-routes-translations.ts`](./config/default-storefront-routes-translations.ts).
-
-```typescript
-// defaut-storefront-routes-translations.ts
-
-default: {
-    product: {
-      paramsMapping: { productCode: 'code' }
-      /* ... */
-    },
-    category: {
-      paramsMapping: { categoryCode: 'code' }
-      /* ... */
-    },
-    orderDetails: {
-      paramsMapping: { orderCode: 'code' }
-      /* ... */
-    },
-    /* ... */
-}
-```
-
-**SUBJECTS OF CHANGE:**
-
-- default `paramsMappings` are planned to be moved out from `@spartacus/core` and splitted in between the feature modules in `@spartacus/storefrontlib`
 
 ## Disabling routes
 
